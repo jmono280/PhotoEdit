@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
-from app.routers import auth, batches, edits, pages
+from app.routers import auth, batches, compose, edits, pages
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 
@@ -23,6 +23,7 @@ app.state.templates = templates
 # Los routers ya declaran su propio prefix — no repetirlo aquí
 app.include_router(auth.router)
 app.include_router(batches.router)
+app.include_router(compose.router)
 app.include_router(edits.router)
 app.include_router(pages.router)
 

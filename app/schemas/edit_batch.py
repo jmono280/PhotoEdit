@@ -47,4 +47,5 @@ class BatchProgressOut(BaseModel):
     failed: int
     processing: int
     pending: int
+    has_overlay: bool = False
     jobs: list[JobProgressItem]

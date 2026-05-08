@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +12,7 @@ from app.database import get_db
 from app.models.edit_batch import EditBatch
 from app.models.edit_job import EditJob
 from app.models.user import User
+from app.core.config import settings
 from app.repositories.edit_batch_repo import EditBatchRepository
 from app.repositories.edit_job_repo import EditJobRepository
 from app.repositories.usage_log_repo import UsageLogRepository
@@ -87,6 +90,7 @@ async def batch_progress(
         failed=summary["failed"],
         processing=summary["processing"],
         pending=summary["pending"],
+        has_overlay=bool(batch.overlay_path),
         jobs=[JobProgressItem.model_validate(j) for j in jobs],
     )
 
@@ -101,6 +105,24 @@ async def get_batch(
     if not batch:
         raise HTTPException(404)
     return EditBatchDetailOut.model_validate(batch)
+
+
+@router.get("/{batch_id}/overlay")
+async def batch_overlay(
+    batch_id: uuid.UUID,
+    user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+) -> FileResponse:
+    batch = await _batch_repo.get_by_id_for_user(db, batch_id, user.id)
+    if not batch or not batch.overlay_path:
+        raise HTTPException(404)
+    p = Path(batch.overlay_path)
+    upload_root = Path(settings.UPLOAD_DIR).resolve()
+    if not str(p.resolve()).startswith(str(upload_root)):
+        raise HTTPException(404)
+    if not p.exists():
+        raise HTTPException(404)
+    return FileResponse(p)
 
 
 @router.delete("/{batch_id}", status_code=204)

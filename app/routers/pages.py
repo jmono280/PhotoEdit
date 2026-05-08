@@ -36,6 +36,11 @@ async def batch_detail_page(batch_id: str, request: Request) -> HTMLResponse:
     return _render(request, "batch_detail.html", {"batch_id": batch_id})
 
 
+@router.get("/compose", response_class=HTMLResponse)
+async def compose_page(request: Request) -> HTMLResponse:
+    return _render(request, "compose.html")
+
+
 @router.get("/", response_class=HTMLResponse)
 async def editor_page(request: Request) -> HTMLResponse:
     return _render(request, "editor.html")

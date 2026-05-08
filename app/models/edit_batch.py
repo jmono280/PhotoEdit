@@ -32,6 +32,7 @@ class EditBatch(TimestampMixin, Base):
     total_cost_usd: Mapped[Decimal | None] = mapped_column(
         Numeric(10, 6), nullable=True
     )
+    overlay_path: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     jobs: Mapped[list["EditJob"]] = relationship(
         "EditJob", back_populates="batch", lazy="selectin"

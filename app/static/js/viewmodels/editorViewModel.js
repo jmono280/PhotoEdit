@@ -1,5 +1,6 @@
 import { ViewModel } from "./base.js";
 import { batchesApi } from "../models/batchesApi.js";
+import { composeApi } from "../models/composeApi.js";
 
 export class EditorViewModel extends ViewModel {
   constructor(maxImages = 20) {
@@ -10,6 +11,8 @@ export class EditorViewModel extends ViewModel {
       error: null,
       batchId: null,
       maxImages,
+      referenceFile: null,
+      referencePreview: null,
     });
   }
 
@@ -35,15 +38,31 @@ export class EditorViewModel extends ViewModel {
 
   setPrompt(p) { this.set({ prompt: p }); }
 
+  setReference(file) {
+    if (this.state.referencePreview) URL.revokeObjectURL(this.state.referencePreview);
+    this.set({
+      referenceFile: file,
+      referencePreview: file ? URL.createObjectURL(file) : null,
+    });
+  }
+
+  clearReference() { this.setReference(null); }
+
   async submit() {
     if (!this.state.files.length) return this.set({ error: "Sube al menos una imagen" });
     if (!this.state.prompt.trim()) return this.set({ error: "Escribe un prompt" });
     this.set({ status: "uploading", error: null });
     try {
-      const batch = await batchesApi.create(
-        this.state.files.map(f => f.file),
-        this.state.prompt,
-      );
+      const batch = this.state.referenceFile
+        ? await composeApi.create(
+            this.state.referenceFile,
+            this.state.files.map(f => f.file),
+            this.state.prompt,
+          )
+        : await batchesApi.create(
+            this.state.files.map(f => f.file),
+            this.state.prompt,
+          );
       this.set({ status: "submitted", batchId: batch.id });
       window.location = "/batch/" + batch.id;
     } catch (e) {

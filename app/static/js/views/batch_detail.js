@@ -10,12 +10,14 @@ const main = document.querySelector("[data-batch-id]");
 const batchId = main.dataset.batchId;
 const vm = new BatchProgressViewModel(batchId);
 
-const titleEl = document.getElementById("batch-title");
-const promptEl = document.getElementById("prompt-display");
-const progressBar = document.getElementById("progress-bar");
-const progressLabel = document.getElementById("progress-label");
-const progressCount = document.getElementById("progress-count");
-const grid = document.getElementById("jobs-grid");
+const titleEl        = document.getElementById("batch-title");
+const promptEl       = document.getElementById("prompt-display");
+const progressBar    = document.getElementById("progress-bar");
+const progressLabel  = document.getElementById("progress-label");
+const progressCount  = document.getElementById("progress-count");
+const grid           = document.getElementById("jobs-grid");
+const overlaySection = document.getElementById("overlay-section");
+const overlayImg     = document.getElementById("overlay-img");
 
 const STATUS_TITLES = {
   pending: "Preparando lote…",
@@ -28,6 +30,16 @@ const STATUS_TITLES = {
 vm.subscribe(async state => {
   if (!state.progress) return;
   const p = state.progress;
+
+  // Foto de referencia — mostrar una sola vez
+  if (p.has_overlay && !overlaySection._loaded) {
+    overlaySection._loaded = true;
+    overlaySection.classList.remove("hidden");
+    overlaySection.classList.add("block");
+    editsApi.fetchImageBlob("/batches/" + batchId + "/overlay")
+      .then(url => { overlayImg.src = url; })
+      .catch(() => {});
+  }
 
   // Título
   titleEl.textContent = STATUS_TITLES[p.status] || p.status;
@@ -103,11 +115,11 @@ async function renderGrid(jobs) {
         <div class="grid grid-cols-2 gap-px bg-gray-100">
           <div>
             <p class="text-xs text-center text-gray-400 py-0.5">Original</p>
-            <img class="w-full h-32 object-cover bg-gray-50" alt="Original">
+            <img class="w-full h-48 object-contain bg-gray-50" alt="Original">
           </div>
           <div>
             <p class="text-xs text-center text-gray-400 py-0.5">Editada</p>
-            <img class="w-full h-32 object-cover bg-gray-50" alt="Editada">
+            <img class="w-full h-48 object-contain bg-gray-50" alt="Editada">
           </div>
         </div>
         <div class="p-3">

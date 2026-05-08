@@ -29,6 +29,15 @@ class Settings(BaseSettings):
     APP_NAME: str = "Photo Edit AI"
     DEBUG: bool = False
 
+    META_BUSINESS_NAME: str = ""
+    META_WEBSITE:       str = ""
+    META_GPS_LAT:       str = ""
+    META_GPS_LON:       str = ""
+    META_COPYRIGHT:     str = ""
+    META_DESCRIPTION:   str = ""
+    META_OUTPUT_WIDTH:  int = 0
+    META_OUTPUT_HEIGHT: int = 0
+
     @property
     def allowed_extensions_set(self) -> set[str]:
         return {e.strip().lower() for e in self.ALLOWED_IMAGE_EXTENSIONS.split(",")}

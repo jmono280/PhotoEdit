@@ -7,12 +7,17 @@ if (!getToken()) { window.location = "/login"; throw new Error("auth"); }
 const MAX = parseInt(document.body.dataset.maxImages || "20");
 const vm = new EditorViewModel(MAX);
 
-const previews = document.getElementById("previews");
-const dropzone = document.getElementById("dropzone");
-const fileInput = document.getElementById("file-input");
-const fileCount = document.getElementById("file-count");
-const errorEl = document.getElementById("error");
-const submitBtn = document.getElementById("submit");
+const previews    = document.getElementById("previews");
+const dropzone    = document.getElementById("dropzone");
+const fileInput   = document.getElementById("file-input");
+const fileCount   = document.getElementById("file-count");
+const errorEl     = document.getElementById("error");
+const submitBtn   = document.getElementById("submit");
+const refZone     = document.getElementById("ref-zone");
+const refInput    = document.getElementById("ref-input");
+const refPreview  = document.getElementById("ref-preview");
+const refPlaceholder = document.getElementById("ref-placeholder");
+const refClear    = document.getElementById("ref-clear");
 
 vm.subscribe(state => {
   // Previews
@@ -22,7 +27,7 @@ vm.subscribe(state => {
     card.className = "relative group";
     const img = document.createElement("img");
     img.src = f.previewUrl;
-    img.className = "w-full h-24 object-cover rounded-lg";
+    img.className = "w-full h-40 object-contain rounded-lg bg-gray-100";
     img.alt = f.file.name;
     const btn = document.createElement("button");
     btn.type = "button";
@@ -49,6 +54,18 @@ vm.subscribe(state => {
     errorEl.classList.remove("hidden");
   } else {
     errorEl.classList.add("hidden");
+  }
+
+  // Referencia
+  if (state.referencePreview) {
+    refPreview.src = state.referencePreview;
+    refPreview.classList.remove("hidden");
+    refPlaceholder.classList.add("hidden");
+    refClear.classList.remove("hidden");
+  } else {
+    refPreview.classList.add("hidden");
+    refPlaceholder.classList.remove("hidden");
+    refClear.classList.add("hidden");
   }
 
   // Submit
@@ -78,6 +95,23 @@ fileInput.addEventListener("change", e => {
   fileInput.value = "";
 });
 
+// Zona de referencia
+refZone.onclick = (e) => {
+  if (e.target !== refClear && e.target !== refInput && !e.target.closest("label")) refInput.click();
+};
+refZone.addEventListener("dragover", e => { e.preventDefault(); refZone.classList.add("border-blue-400", "bg-blue-50"); });
+refZone.addEventListener("dragleave", () => refZone.classList.remove("border-blue-400", "bg-blue-50"));
+refZone.addEventListener("drop", e => {
+  e.preventDefault();
+  refZone.classList.remove("border-blue-400", "bg-blue-50");
+  if (e.dataTransfer.files[0]) vm.setReference(e.dataTransfer.files[0]);
+});
+refInput.addEventListener("change", e => {
+  if (e.target.files[0]) vm.setReference(e.target.files[0]);
+  refInput.value = "";
+});
+refClear.addEventListener("click", e => { e.stopPropagation(); vm.clearReference(); });
+
 const promptEl = document.getElementById("prompt");
 promptEl.value = `Retouch this vehicle photo for Automania Buy Here Pay Here inventory in a clean, consistent dealership studio style.
 
@@ -89,9 +123,11 @@ promptEl.value = `Retouch this vehicle photo for Automania Buy Here Pay Here inv
 
 **Retouching:** remove only minor distractions (light dust, small scuffs, tiny paint imperfections). Keep edits subtle and natural — do not over-retouch or make the vehicle look fake.
 
-**Do not add** any text, logos, signs, graphics, watermarks, stickers, frames, or banners. Only the vehicle on the uniform studio background.
+**Reference image (license plate):** a reference image will be provided and must be placed exactly where the vehicle's license plate normally sits — on the front license plate area when the photo shows the front of the car, and on the rear license plate area when the photo shows the back. Fit the reference image naturally into the existing plate mounting area, matching the plate's perspective, angle, scale, and tilt so it looks like a real plate on the vehicle. Blend the lighting and shadows of the reference image with the rest of the car so it integrates realistically. Do not place the reference image anywhere else on the vehicle, body, windows, or background. If the photo is a side view or any angle where no license plate area is visible, do not add the reference image.
 
-Final result: the same real car in its exact original angle and position, professionally retouched. Not CGI, not overprocessed. Style: premium, consistent Buy Here Pay Here dealership inventory photo for Automania.`;
+**Do not add** any text, logos, signs, graphics, watermarks, stickers, frames, or banners other than the provided reference image in the license plate position. Only the vehicle on the uniform studio background.
+
+Final result: the same real car in its exact original angle and position, professionally retouched, with the reference image naturally integrated in the license plate area when visible. Not CGI, not overprocessed. Style: premium, consistent Buy Here Pay Here dealership inventory photo for Automania.`;
 vm.setPrompt(promptEl.value);
 promptEl.addEventListener("input", e => vm.setPrompt(e.target.value));
 submitBtn.addEventListener("click", () => vm.submit());

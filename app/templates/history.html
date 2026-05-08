@@ -1,23 +1,54 @@
 {% extends "base.html" %}
 {% block title %}Historial — {{ app_name }}{% endblock %}
 {% block content %}
-<div class="flex h-screen">
+<div class="flex flex-col h-screen">
 
-  <aside class="w-48 bg-gray-800 text-white flex flex-col p-4 space-y-2 shrink-0">
-    <span class="font-bold text-lg mb-4">{{ app_name }}</span>
-    <a href="/" class="px-3 py-2 rounded hover:bg-gray-700">Editor</a>
-    <a href="/history" class="px-3 py-2 rounded bg-gray-700 font-medium">Historial</a>
-    <button id="logout" class="px-3 py-2 rounded hover:bg-gray-700 text-left mt-auto">
-      Salir
+  <!-- Mobile topbar -->
+  <div class="md:hidden flex items-center gap-3 px-4 h-14 bg-gray-900 text-white shrink-0">
+    <button id="sidebar-toggle" class="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
     </button>
-  </aside>
+    <span class="font-semibold text-sm">{{ app_name }}</span>
+  </div>
 
-  <main class="flex-1 p-8 overflow-y-auto">
-    <h1 class="text-2xl font-bold mb-6">Historial de lotes</h1>
-    <div id="batch-list" class="space-y-3"></div>
-    <p id="empty" class="hidden text-gray-400 text-sm">No hay lotes todavía.</p>
-  </main>
+  <div class="flex flex-1 min-h-0">
 
+    <!-- Overlay móvil -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-56 bg-gray-900 text-white flex flex-col -translate-x-full md:translate-x-0 md:relative md:inset-auto transition-transform duration-200 shrink-0">
+      <div class="px-5 py-4 border-b border-white/10 hidden md:block">
+        <span class="font-bold text-sm tracking-wide">{{ app_name }}</span>
+      </div>
+      <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
+        <a href="/" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+          Editor
+        </a>
+        <a href="/compose" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+          Componer
+        </a>
+        <a href="/history" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm bg-white/10 text-white font-medium">
+          Historial
+        </a>
+      </nav>
+      <div class="p-3 border-t border-white/10">
+        <button id="logout" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors text-left">
+          Salir
+        </button>
+      </div>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
+      <h1 class="text-xl font-semibold text-gray-900 mb-6">Historial de lotes</h1>
+      <div id="batch-list" class="space-y-3"></div>
+      <p id="empty" class="hidden text-gray-400 text-sm">No hay lotes todavía.</p>
+    </main>
+
+  </div>
 </div>
 {% endblock %}
 {% block view_script %}history{% endblock %}

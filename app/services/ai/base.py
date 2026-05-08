@@ -16,3 +16,12 @@ class AIImageProvider(Protocol):
     async def edit_image(
         self, image_bytes: bytes, prompt: str, mime: str
     ) -> AIEditResult: ...
+
+    async def compose_image(
+        self,
+        base_bytes: bytes,
+        overlay_bytes: bytes,
+        prompt: str,
+        base_mime: str,
+        overlay_mime: str,
+    ) -> AIEditResult: ...

@@ -82,3 +82,72 @@ class OpenRouterImageEditor:
             response_size=response_size,
             cost_usd=cost_usd,
         )
+
+    async def compose_image(
+        self,
+        base_bytes: bytes,
+        overlay_bytes: bytes,
+        prompt: str,
+        base_mime: str,
+        overlay_mime: str,
+    ) -> AIEditResult:
+        base_b64 = base64.b64encode(base_bytes).decode()
+        overlay_b64 = base64.b64encode(overlay_bytes).decode()
+
+        payload = {
+            "model": self._model,
+            "modalities": ["image"],
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:{overlay_mime};base64,{overlay_b64}"}},
+                        {"type": "image_url", "image_url": {"url": f"data:{base_mime};base64,{base_b64}"}},
+                    ],
+                }
+            ],
+        }
+
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "HTTP-Referer": self._http_referer,
+            "X-Title": self._x_title,
+            "Content-Type": "application/json",
+        }
+
+        start = time.perf_counter()
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            response = await client.post(
+                f"{self._base_url}/chat/completions",
+                json=payload,
+                headers=headers,
+            )
+        duration_ms = int((time.perf_counter() - start) * 1000)
+
+        response.raise_for_status()
+
+        response_size = len(response.content)
+        data = response.json()
+
+        images = data["choices"][0]["message"].get("images") or []
+        if not images:
+            raise RuntimeError("OpenRouter did not return an image")
+
+        result_data_url: str = images[0]["image_url"]["url"]
+        _, b64_part = result_data_url.split(",", 1)
+        result_bytes = base64.b64decode(b64_part)
+
+        cost_usd: float | None = None
+        usage = data.get("usage") or {}
+        if "cost" in usage:
+            cost_usd = float(usage["cost"])
+
+        return AIEditResult(
+            image_bytes=result_bytes,
+            model=self._model,
+            duration_ms=duration_ms,
+            http_status=response.status_code,
+            response_size=response_size,
+            cost_usd=cost_usd,
+        )

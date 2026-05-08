@@ -16,17 +16,29 @@ class EditBatchRepository:
         prompt: str,
         ai_model: str,
         total_images: int,
+        overlay_path: str | None = None,
     ) -> EditBatch:
         batch = EditBatch(
             user_id=user_id,
             prompt=prompt,
             ai_model=ai_model,
             total_images=total_images,
+            overlay_path=overlay_path,
         )
         db.add(batch)
         await db.commit()
         await db.refresh(batch)
         return batch
+
+    async def update_overlay_path(
+        self, db: AsyncSession, batch_id: uuid.UUID, overlay_path: str
+    ) -> None:
+        await db.execute(
+            update(EditBatch)
+            .where(EditBatch.id == batch_id)
+            .values(overlay_path=overlay_path)
+        )
+        await db.commit()
 
     async def soft_delete(self, db: AsyncSession, batch: EditBatch) -> None:
         batch.deleted_at = datetime.now(timezone.utc)

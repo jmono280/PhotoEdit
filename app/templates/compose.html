@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Editor — {{ app_name }}{% endblock %}
+{% block title %}Componer — {{ app_name }}{% endblock %}
 {% block content %}
 <div class="flex flex-col h-screen">
 
@@ -24,10 +24,10 @@
         <span class="font-bold text-sm tracking-wide">{{ app_name }}</span>
       </div>
       <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
-        <a href="/" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm bg-white/10 text-white font-medium">
+        <a href="/" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
           Editor
         </a>
-        <a href="/compose" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
+        <a href="/compose" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm bg-white/10 text-white font-medium">
           Componer
         </a>
         <a href="/history" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
@@ -43,62 +43,55 @@
 
     <!-- Contenido -->
     <main class="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
-      <h1 class="text-xl font-semibold text-gray-900 mb-6">Nuevo lote</h1>
+      <h1 class="text-xl font-semibold text-gray-900 mb-1">Componer elemento en lote</h1>
+      <p class="text-sm text-gray-500 mb-6">Agrega un elemento (cartel, logo, sticker) a varias imágenes a la vez.</p>
 
-      <!-- Drop zone -->
-      <div id="dropzone"
-           class="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors mb-4">
-        <p class="text-gray-500 text-sm">Arrastra imágenes aquí o haz clic para seleccionar</p>
-        <p class="text-xs text-gray-400 mt-1">JPG, JPEG, PNG, WEBP · máx. {{ max_images }} imágenes</p>
-        <input id="file-input" type="file" multiple accept="image/*" class="hidden">
-      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
-      <!-- Contador -->
-      <p id="file-count" class="text-sm text-gray-500 mb-4"></p>
-
-      <!-- Grid de previews -->
-      <div id="previews" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6"></div>
-
-      <!-- Referencia opcional -->
-      <div class="mb-5">
-        <p class="text-sm font-medium text-gray-700 mb-2">
-          Foto de referencia
-          <span class="text-gray-400 font-normal">(opcional · ej: placa)</span>
-        </p>
-        <div id="ref-zone"
-             class="bg-white border-2 border-dashed border-gray-200 rounded-2xl px-4 py-3 cursor-pointer
-                    hover:border-blue-400 hover:bg-blue-50/30 transition-colors flex items-center gap-4 min-h-[72px]">
-          <div id="ref-placeholder" class="flex items-center gap-3">
-            <span class="text-gray-400 text-sm">Arrastra aquí o</span>
-            <label for="ref-input"
-                   class="cursor-pointer text-sm text-blue-500 hover:text-blue-700 font-medium">
-              Seleccionar archivo
-            </label>
+        <!-- Elemento a agregar -->
+        <div>
+          <p class="text-sm font-medium text-gray-700 mb-2">Elemento a agregar</p>
+          <div id="overlay-zone"
+               class="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors relative min-h-[140px] flex items-center justify-center">
+            <p class="text-gray-500 text-sm">Arrastra o haz clic para seleccionar<br><span class="text-xs text-gray-400">1 imagen (JPG, PNG, WEBP)</span></p>
+            <img id="overlay-preview" class="hidden max-h-32 mx-auto rounded-xl object-contain" alt="Elemento">
+            <input id="overlay-input" type="file" accept="image/*" class="hidden">
           </div>
-          <img id="ref-preview" class="hidden h-14 rounded-xl object-contain" alt="Referencia">
-          <button id="ref-clear" type="button"
-                  class="hidden ml-auto text-xs text-gray-400 hover:text-red-500 shrink-0 transition-colors">
-            Quitar
-          </button>
-          <input id="ref-input" type="file" accept="image/*" class="hidden">
         </div>
+
+        <!-- Imágenes base -->
+        <div>
+          <p class="text-sm font-medium text-gray-700 mb-2">Imágenes base</p>
+          <div id="base-zone"
+               class="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors min-h-[140px] flex items-center justify-center">
+            <p class="text-gray-500 text-sm">Arrastra o haz clic para seleccionar<br><span class="text-xs text-gray-400">Hasta {{ max_images }} imágenes</span></p>
+            <input id="base-input" type="file" multiple accept="image/*" class="hidden">
+          </div>
+        </div>
+
       </div>
+
+      <!-- Contador base -->
+      <p id="base-count" class="text-sm text-gray-500 mb-3"></p>
+
+      <!-- Grid previews base -->
+      <div id="base-previews" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6"></div>
 
       <!-- Prompt -->
       <textarea id="prompt" rows="3"
-                placeholder="Instrucción de edición (ej: convert to vintage sepia tone)"
+                placeholder="Describe cómo agregar el elemento (ej: place the for sale sign on the windshield corner)"
                 class="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors resize-none"></textarea>
 
-      <!-- Error inline -->
+      <!-- Error -->
       <div id="error" class="hidden bg-red-50 text-red-700 p-3 rounded-xl mb-4 text-sm border border-red-100"></div>
 
       <button id="submit" disabled
               class="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-        Procesar lote
+        Procesar composición
       </button>
     </main>
 
   </div>
 </div>
 {% endblock %}
-{% block view_script %}editor{% endblock %}
+{% block view_script %}compose{% endblock %}
