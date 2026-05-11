@@ -106,11 +106,12 @@ Esto crea las 4 tablas: `users`, `edit_batches`, `edit_jobs`, `api_usage_log`.
 ### 6. Crear usuario administrador
 
 ```bash
-ADMIN_EMAIL=admin@example.com \
-ADMIN_PASSWORD=password123 \
+ADMIN_EMAIL=tu@email.com \
 ADMIN_FULL_NAME="Admin" \
 python -m app.scripts.seed_admin
 ```
+
+> Si no se pasa `ADMIN_PASSWORD`, el script genera una contraseña aleatoria segura y la imprime en consola.
 
 ### 7. Arrancar el servidor
 
@@ -141,12 +142,12 @@ python -m app.scripts.test_ai foto.jpg "convert to black and white"
 # Registrar usuario
 curl -X POST http://localhost:8001/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123","full_name":"Test User"}'
+  -d '{"email":"<tu-email>","password":"<contraseña>","full_name":"<nombre>"}'
 
 # Login — guardar token
 TOKEN=$(curl -s -X POST http://localhost:8001/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}' \
+  -d '{"email":"<tu-email>","password":"<contraseña>"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 # Verificar identidad

@@ -107,6 +107,9 @@ async def get_batch(
     return EditBatchDetailOut.model_validate(batch)
 
 
+_VALID_OVERLAY_TYPES = {"licence_plate", "new_arrival"}
+
+
 @router.get("/{batch_id}/overlay")
 async def batch_overlay(
     batch_id: uuid.UUID,
@@ -114,13 +117,11 @@ async def batch_overlay(
     db: AsyncSession = Depends(get_db),
 ) -> FileResponse:
     batch = await _batch_repo.get_by_id_for_user(db, batch_id, user.id)
-    if not batch or not batch.overlay_path:
+    if not batch or batch.overlay_path not in _VALID_OVERLAY_TYPES:
         raise HTTPException(404)
-    p = Path(batch.overlay_path)
-    upload_root = Path(settings.UPLOAD_DIR).resolve()
-    if not str(p.resolve()).startswith(str(upload_root)):
-        raise HTTPException(404)
-    if not p.exists():
+    from app.services.batch_service import _find_overlay_file
+    p = _find_overlay_file(batch.overlay_path)
+    if p is None:
         raise HTTPException(404)
     return FileResponse(p)
 

@@ -11,23 +11,18 @@ export class EditorViewModel extends ViewModel {
       error: null,
       batchId: null,
       maxImages,
-      referenceFile: null,
-      referencePreview: null,
+      referenceType: null,
     });
   }
 
   addFiles(fileList) {
-    const newOnes = Array.from(fileList).map(f => ({
-      id: crypto.randomUUID(),
-      file: f,
-      previewUrl: URL.createObjectURL(f),
-    }));
-    const all = [...this.state.files, ...newOnes];
-    if (all.length > this.state.maxImages) {
-      this.set({ error: "Máximo " + this.state.maxImages + " imágenes" });
-      return;
-    }
-    this.set({ files: all, error: null });
+    const file = fileList[0];
+    if (!file) return;
+    if (this.state.files[0]) URL.revokeObjectURL(this.state.files[0].previewUrl);
+    this.set({
+      files: [{ id: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) }],
+      error: null,
+    });
   }
 
   removeFile(id) {
@@ -38,24 +33,18 @@ export class EditorViewModel extends ViewModel {
 
   setPrompt(p) { this.set({ prompt: p }); }
 
-  setReference(file) {
-    if (this.state.referencePreview) URL.revokeObjectURL(this.state.referencePreview);
-    this.set({
-      referenceFile: file,
-      referencePreview: file ? URL.createObjectURL(file) : null,
-    });
-  }
+  setReference(type) { this.set({ referenceType: type, error: null }); }
 
-  clearReference() { this.setReference(null); }
+  clearReference() { this.set({ referenceType: null }); }
 
   async submit() {
     if (!this.state.files.length) return this.set({ error: "Sube al menos una imagen" });
     if (!this.state.prompt.trim()) return this.set({ error: "Escribe un prompt" });
     this.set({ status: "uploading", error: null });
     try {
-      const batch = this.state.referenceFile
+      const batch = this.state.referenceType
         ? await composeApi.create(
-            this.state.referenceFile,
+            this.state.referenceType,
             this.state.files.map(f => f.file),
             this.state.prompt,
           )

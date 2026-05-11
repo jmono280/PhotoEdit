@@ -1,3 +1,5 @@
+import time
+
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
@@ -5,9 +7,12 @@ from app.core.config import settings
 
 router = APIRouter(tags=["pages"])
 
+_STATIC_VER = str(int(time.time()))
+
 _ctx = {
     "app_name": settings.APP_NAME,
     "max_images": settings.MAX_IMAGES_PER_BATCH,
+    "static_ver": _STATIC_VER,
 }
 
 

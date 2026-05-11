@@ -4,5 +4,7 @@ __pycache__/
 *.pyc
 uploads/originals/*
 uploads/results/*
+uploads/overlays/*
 !uploads/originals/.gitkeep
 !uploads/results/.gitkeep
+!uploads/overlays/.gitkeep

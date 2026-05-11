@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_active_user
@@ -22,15 +22,20 @@ _edit_service = EditService(_job_repo, _usage_repo, _ai)
 _service = BatchService(_batch_repo, _job_repo, _edit_service)
 
 
+VALID_OVERLAY_TYPES = {"licence_plate", "new_arrival"}
+
+
 @router.post("/", response_model=EditBatchOut, status_code=201)
 async def create_compose(
     background: BackgroundTasks,
-    overlay: UploadFile = File(...),
+    overlay_type: str = Form(...),
     files: list[UploadFile] = File(...),
     prompt: str = Form(...),
     user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> EditBatchOut:
-    batch = await _service.create_compose_batch(db, user, overlay, files, prompt)
+    if overlay_type not in VALID_OVERLAY_TYPES:
+        raise HTTPException(400, f"Tipo de referencia no válido: {overlay_type}")
+    batch = await _service.create_compose_batch(db, user, overlay_type, files, prompt)
     background.add_task(_service.process_compose_batch, batch.id)
     return EditBatchOut.model_validate(batch)

@@ -16,7 +16,7 @@
   {% block content %}{% endblock %}
 
   {% block extra_scripts %}{% endblock %}
-  <script type="module" src="/static/js/views/{% block view_script %}{% endblock %}.js"></script>
+  <script type="module" src="/static/js/views/{% block view_script %}{% endblock %}.js?v={{ static_ver }}"></script>
 
   <script>
     const sidebar = document.getElementById('sidebar');

@@ -7,6 +7,7 @@ if (!getToken()) { window.location = "/login"; throw new Error("auth"); }
 const vm = new HistoryViewModel();
 const listEl = document.getElementById("batch-list");
 const emptyEl = document.getElementById("empty");
+const userCardEl = document.getElementById("user-card");
 
 const STATUS_LABELS = {
   pending:    { text: "Pendiente",  cls: "bg-gray-100 text-gray-600" },
@@ -23,7 +24,34 @@ function formatDate(iso) {
   });
 }
 
+function formatCost(val) {
+  if (val == null) return "—";
+  const n = parseFloat(val);
+  if (n === 0) return "$0.00";
+  if (n < 0.001) return "$" + n.toFixed(6);
+  return "$" + n.toFixed(4);
+}
+
 vm.subscribe(state => {
+  if (state.user && userCardEl) {
+    userCardEl.classList.remove("hidden");
+    userCardEl.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-white text-sm font-semibold shrink-0">
+          ${(state.user.full_name || state.user.email || "?")[0].toUpperCase()}
+        </div>
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-gray-900 truncate">${state.user.full_name || "—"}</p>
+          <p class="text-xs text-gray-400 truncate">${state.user.email}</p>
+        </div>
+        <div class="ml-auto text-right shrink-0">
+          <p class="text-xs text-gray-400">Total lotes</p>
+          <p class="text-sm font-semibold text-gray-800">${state.total}</p>
+        </div>
+      </div>
+    `;
+  }
+
   if (state.isLoading) {
     listEl.innerHTML = `<p class="text-sm text-gray-400">Cargando…</p>`;
     emptyEl.classList.add("hidden");
@@ -41,17 +69,27 @@ vm.subscribe(state => {
 
   state.batches.forEach(batch => {
     const s = STATUS_LABELS[batch.status] || { text: batch.status, cls: "bg-gray-100 text-gray-600" };
+    const failed = batch.failed_count > 0
+      ? `<span class="text-red-400">${batch.failed_count} fallidas</span>`
+      : "";
 
     const row = document.createElement("div");
     row.className =
-      "bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 " +
-      "cursor-pointer hover:shadow-md transition-shadow";
+      "bg-white rounded-xl border border-gray-100 shadow-sm p-4 " +
+      "cursor-pointer hover:shadow-md hover:border-gray-200 transition-all";
 
     row.innerHTML = `
-      <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${s.cls}">${s.text}</span>
-      <span class="flex-1 text-sm font-medium truncate">${batch.prompt}</span>
-      <span class="text-xs text-gray-400 shrink-0">${batch.completed_count}/${batch.total_images}</span>
-      <span class="text-xs text-gray-400 shrink-0">${formatDate(batch.created_at)}</span>
+      <div class="flex items-center gap-3 mb-2.5">
+        <span class="text-xs px-2.5 py-0.5 rounded-full font-medium shrink-0 ${s.cls}">${s.text}</span>
+        <span class="text-xs text-gray-400 shrink-0">${formatDate(batch.created_at)}</span>
+        <span class="ml-auto text-xs font-semibold text-gray-700 shrink-0">${formatCost(batch.total_cost_usd)}</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-gray-500">
+        <span>${batch.total_images} imágenes</span>
+        <span>${batch.completed_count} completadas</span>
+        ${failed}
+        <span class="ml-auto text-gray-300 text-base">→</span>
+      </div>
     `;
 
     row.addEventListener("click", () => { window.location = "/batch/" + batch.id; });

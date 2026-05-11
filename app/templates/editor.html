@@ -43,14 +43,14 @@
 
     <!-- Contenido -->
     <main class="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
-      <h1 class="text-xl font-semibold text-gray-900 mb-6">Nuevo lote</h1>
+      <h1 class="text-xl font-semibold text-gray-900 mb-6">New Arrival</h1>
 
       <!-- Drop zone -->
       <div id="dropzone"
            class="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors mb-4">
-        <p class="text-gray-500 text-sm">Arrastra imágenes aquí o haz clic para seleccionar</p>
-        <p class="text-xs text-gray-400 mt-1">JPG, JPEG, PNG, WEBP · máx. {{ max_images }} imágenes</p>
-        <input id="file-input" type="file" multiple accept="image/*" class="hidden">
+        <p class="text-gray-500 text-sm">Arrastra una imagen aquí o haz clic para seleccionar</p>
+        <p class="text-xs text-gray-400 mt-1">JPG, JPEG, PNG, WEBP</p>
+        <input id="file-input" type="file" accept="image/*" class="hidden">
       </div>
 
       <!-- Contador -->
@@ -62,30 +62,24 @@
       <!-- Referencia opcional -->
       <div class="mb-5">
         <p class="text-sm font-medium text-gray-700 mb-2">
-          Foto de referencia
-          <span class="text-gray-400 font-normal">(opcional · ej: placa)</span>
+          Imagen de referencia
+          <span class="text-gray-400 font-normal">(opcional)</span>
         </p>
-        <div id="ref-zone"
-             class="bg-white border-2 border-dashed border-gray-200 rounded-2xl px-4 py-3 cursor-pointer
-                    hover:border-blue-400 hover:bg-blue-50/30 transition-colors flex items-center gap-4 min-h-[72px]">
-          <div id="ref-placeholder" class="flex items-center gap-3">
-            <span class="text-gray-400 text-sm">Arrastra aquí o</span>
-            <label for="ref-input"
-                   class="cursor-pointer text-sm text-blue-500 hover:text-blue-700 font-medium">
-              Seleccionar archivo
-            </label>
-          </div>
-          <img id="ref-preview" class="hidden h-14 rounded-xl object-contain" alt="Referencia">
-          <button id="ref-clear" type="button"
-                  class="hidden ml-auto text-xs text-gray-400 hover:text-red-500 shrink-0 transition-colors">
-            Quitar
+        <div class="flex gap-3">
+          <button id="ref-arrival" data-type="new_arrival"
+                  class="ref-btn flex-1 bg-white border-2 border-gray-200 rounded-2xl px-3 py-2 flex items-center gap-3 hover:border-blue-300 transition-colors">
+            <img src="/static/overlays/new_arrival.jpg" class="h-10 w-16 object-contain rounded" alt="New Arrival">
+            <span class="text-sm text-gray-700">New Arrival</span>
           </button>
-          <input id="ref-input" type="file" accept="image/*" class="hidden">
+          <button id="ref-none" data-type=""
+                  class="ref-btn flex-1 bg-white border-2 border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-500 hover:border-blue-300 transition-colors">
+            Sin referencia
+          </button>
         </div>
       </div>
 
       <!-- Prompt -->
-      <textarea id="prompt" rows="3"
+      <textarea id="prompt" rows="12"
                 placeholder="Instrucción de edición (ej: convert to vintage sepia tone)"
                 class="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors resize-none"></textarea>
 

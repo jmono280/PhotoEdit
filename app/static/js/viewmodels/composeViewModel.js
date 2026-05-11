@@ -4,8 +4,7 @@ import { composeApi } from "../models/composeApi.js";
 export class ComposeViewModel extends ViewModel {
   constructor(maxImages = 20) {
     super({
-      overlayFile: null,
-      overlayPreview: null,
+      overlayType: null,
       baseFiles: [],
       prompt: "",
       status: "idle",
@@ -14,13 +13,8 @@ export class ComposeViewModel extends ViewModel {
     });
   }
 
-  setOverlay(file) {
-    if (this.state.overlayPreview) URL.revokeObjectURL(this.state.overlayPreview);
-    this.set({
-      overlayFile: file,
-      overlayPreview: file ? URL.createObjectURL(file) : null,
-      error: null,
-    });
+  setOverlayType(type) {
+    this.set({ overlayType: type, error: null });
   }
 
   addBaseFiles(fileList) {
@@ -46,13 +40,13 @@ export class ComposeViewModel extends ViewModel {
   setPrompt(p) { this.set({ prompt: p }); }
 
   async submit() {
-    if (!this.state.overlayFile) return this.set({ error: "Sube el elemento a agregar" });
+    if (!this.state.overlayType) return this.set({ error: "Selecciona el tipo de referencia" });
     if (!this.state.baseFiles.length) return this.set({ error: "Sube al menos una imagen base" });
     if (!this.state.prompt.trim()) return this.set({ error: "Escribe un prompt" });
     this.set({ status: "uploading", error: null });
     try {
       const batch = await composeApi.create(
-        this.state.overlayFile,
+        this.state.overlayType,
         this.state.baseFiles.map(f => f.file),
         this.state.prompt,
       );

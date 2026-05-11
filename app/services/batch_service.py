@@ -16,6 +16,17 @@ from app.services.edit_service import EditService
 
 logger = logging.getLogger(__name__)
 
+_OVERLAY_EXTENSIONS = ("png", "jpg", "jpeg", "webp")
+
+
+def _find_overlay_file(key: str) -> Path | None:
+    base = Path(settings.OVERLAYS_DIR)
+    for ext in _OVERLAY_EXTENSIONS:
+        p = base / f"{key}.{ext}"
+        if p.exists():
+            return p
+    return None
+
 
 class BatchService:
     def __init__(
@@ -141,7 +152,7 @@ class BatchService:
         self,
         db: AsyncSession,
         user: User,
-        overlay_file: UploadFile,
+        overlay_type: str,
         base_files: list[UploadFile],
         prompt: str,
     ) -> EditBatch:
@@ -153,13 +164,6 @@ class BatchService:
             raise HTTPException(400, "El prompt no puede estar vacío")
 
         max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
-
-        overlay_ext = (overlay_file.filename or "overlay.png").rsplit(".", 1)[-1].lower()
-        if overlay_ext not in settings.allowed_extensions_set:
-            raise HTTPException(400, f"Extensión no permitida para el elemento: {overlay_file.filename}")
-        overlay_content = await overlay_file.read()
-        if len(overlay_content) > max_bytes:
-            raise HTTPException(400, f"El elemento excede el tamaño máximo de {settings.MAX_UPLOAD_SIZE_MB} MB")
 
         validated: list[tuple[UploadFile, bytes]] = []
         for f in base_files:
@@ -179,12 +183,7 @@ class BatchService:
             total_images=len(validated),
         )
 
-        overlay_dir = Path(settings.UPLOAD_DIR).resolve() / "overlays"
-        overlay_dir.mkdir(parents=True, exist_ok=True)
-        overlay_path = overlay_dir / f"{batch.id}.{overlay_ext}"
-        overlay_path.write_bytes(overlay_content)
-
-        await self.batch_repo.update_overlay_path(db, batch.id, str(overlay_path))
+        await self.batch_repo.update_overlay_path(db, batch.id, overlay_type)
 
         jobs_data: list[dict] = []
         for i, (f, content) in enumerate(validated):
@@ -217,13 +216,15 @@ class BatchService:
             jobs = await self.job_repo.list_by_batch(db, batch_id)
             await self.batch_repo.mark_processing(db, batch)
             prompt = batch.prompt
-            overlay_path = batch.overlay_path
+            overlay_key = batch.overlay_path
 
+        overlay_file = _find_overlay_file(overlay_key)
+        if overlay_file is None:
+            logger.error("process_compose_batch: overlay file not found for key %s", overlay_key)
+            return
         import mimetypes
-        overlay_bytes = Path(overlay_path).read_bytes()
-        overlay_mime, _ = mimetypes.guess_type(overlay_path)
-        if overlay_mime is None:
-            overlay_mime = "image/png"
+        overlay_bytes = overlay_file.read_bytes()
+        overlay_mime = mimetypes.guess_type(str(overlay_file))[0] or "image/png"
 
         semaphore = asyncio.Semaphore(settings.BATCH_CONCURRENCY)
 

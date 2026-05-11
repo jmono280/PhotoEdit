@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     META_OUTPUT_WIDTH:  int = 0
     META_OUTPUT_HEIGHT: int = 0
 
+    OVERLAYS_DIR: str = "app/static/overlays"
+
     @property
     def allowed_extensions_set(self) -> set[str]:
         return {e.strip().lower() for e in self.ALLOWED_IMAGE_EXTENSIONS.split(",")}
