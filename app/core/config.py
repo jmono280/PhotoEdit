@@ -35,8 +35,10 @@ class Settings(BaseSettings):
     META_GPS_LON:       str = ""
     META_COPYRIGHT:     str = ""
     META_DESCRIPTION:   str = ""
+    META_RESCALE:       bool = True
     META_OUTPUT_WIDTH:  int = 0
     META_OUTPUT_HEIGHT: int = 0
+    META_PAD_COLOR:     str = "white"
 
     OVERLAYS_DIR: str = "app/static/overlays"
 

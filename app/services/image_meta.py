@@ -15,7 +15,7 @@ def _to_rational(value: float) -> tuple:
 
 
 def embed_metadata(image_bytes: bytes) -> bytes:
-    needs_resize = bool(settings.META_OUTPUT_WIDTH and settings.META_OUTPUT_HEIGHT)
+    needs_resize = settings.META_RESCALE and bool(settings.META_OUTPUT_WIDTH and settings.META_OUTPUT_HEIGHT)
     if not needs_resize and not any([
         settings.META_BUSINESS_NAME, settings.META_WEBSITE, settings.META_GPS_LAT
     ]):
@@ -24,10 +24,16 @@ def embed_metadata(image_bytes: bytes) -> bytes:
     img = Image.open(io.BytesIO(image_bytes))
 
     if needs_resize:
-        img = img.resize(
-            (settings.META_OUTPUT_WIDTH, settings.META_OUTPUT_HEIGHT),
-            Image.LANCZOS,
-        )
+        from PIL import ImageColor
+        target_w = settings.META_OUTPUT_WIDTH
+        target_h = settings.META_OUTPUT_HEIGHT
+
+        img.thumbnail((target_w, target_h), Image.LANCZOS)
+
+        pad_color = ImageColor.getcolor(settings.META_PAD_COLOR, img.mode)
+        canvas = Image.new(img.mode, (target_w, target_h), pad_color)
+        canvas.paste(img, ((target_w - img.width) // 2, (target_h - img.height) // 2))
+        img = canvas
 
     info = PngInfo()
     if settings.META_BUSINESS_NAME:
